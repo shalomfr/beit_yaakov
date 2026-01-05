@@ -1,36 +1,84 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# מערכת ניהול פיננסי - בית יעקב
 
-## Getting Started
+מערכת ניהול פיננסי מודרנית לעמותת בית יעקב, המאפשרת שליטה מלאה בהוצאות, יתרות, חובות והעברות פנימיות בין מסגרות.
 
-First, run the development server:
+## תכונות עיקריות
+
+- 📊 **דשבורד הוצאות** - תמונת מצב יומית של כל ההוצאות לפי מסגרות וקטגוריות
+- 🔄 **עובר ושב פנימי** - ניהול העברות כספיות בין גנים לבית ספר
+- 💰 **מעקב חובות** - ניהול חובות עובדים עם סטטוס ברור
+- 👥 **ניהול עובדים** - רשימת עובדים לפי מסגרות
+- ⚙️ **הגדרות** - ניהול קטגוריות, מסגרות והרשאות
+
+## טכנולוגיות
+
+- **Frontend**: Next.js 14 (App Router) + TypeScript
+- **Styling**: Tailwind CSS + Shadcn/ui
+- **Database**: Prisma ORM + SQLite
+- **Charts**: Recharts
+- **Icons**: Lucide React
+
+## התקנה מקומית
 
 ```bash
+# Clone the repository
+git clone https://github.com/shalomfr/beit_yaakov.git
+cd beit_yaakov
+
+# Install dependencies
+npm install
+
+# Setup database
+npx prisma generate
+npx prisma db push
+
+# Run development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+פתח את הדפדפן בכתובת [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## משתני סביבה
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+צור קובץ `.env` עם המשתנים הבאים:
 
-## Learn More
+```env
+DATABASE_URL="file:./dev.db"
+NEXTAUTH_SECRET="your-secret-key"
+NEXTAUTH_URL="http://localhost:3000"
+```
 
-To learn more about Next.js, take a look at the following resources:
+## מבנה הפרויקט
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+src/
+├── app/                    # Next.js App Router pages
+│   ├── page.tsx           # Dashboard
+│   ├── transfers/         # Internal transfers
+│   ├── debts/             # Debt tracking
+│   ├── employees/         # Employee management
+│   └── settings/          # Settings
+├── components/
+│   ├── layout/            # Sidebar, Header
+│   ├── dashboard/         # Dashboard components
+│   ├── expenses/          # Expense forms
+│   ├── transfers/         # Transfer forms
+│   ├── debts/             # Debt forms
+│   └── ui/                # Shadcn components
+├── lib/
+│   └── prisma.ts          # Prisma client
+└── types/
+    └── index.ts           # TypeScript types
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy ל-Render
 
-## Deploy on Vercel
+1. חבר את הריפו ל-Render
+2. בחר "New Web Service"
+3. הגדר:
+   - Build Command: `npm install && npx prisma generate && npm run build`
+   - Start Command: `npm start`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## רישיון
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT

@@ -1,0 +1,189 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// מסגרות - גנים / בית ספר
+model Framework {
+  id             String   @id @default(cuid())
+  name           String
+  type           FrameworkType
+  currentBalance Float    @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  expenses          Expense[]
+  employees         Employee[]
+  outgoingTransfers InternalTransfer[] @relation("SourceFramework")
+  incomingTransfers InternalTransfer[] @relation("TargetFramework")
+
+  @@map("frameworks")
+}
+
+enum FrameworkType {
+  KINDERGARTEN
+  SCHOOL
+}
+
+// קטגוריות הוצאה
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  icon      String   @default("📁")
+  color     String   @default("#6366f1")
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  expenses Expense[]
+
+  @@map("categories")
+}
+
+// הוצאות
+model Expense {
+  id          String      @id @default(cuid())
+  frameworkId String
+  categoryId  String
+  amount      Float
+  description String
+  expenseDate DateTime
+  expenseType ExpenseType
+  receiptUrl  String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  framework Framework @relation(fields: [frameworkId], references: [id], onDelete: Cascade)
+  category  Category  @relation(fields: [categoryId], references: [id])
+
+  @@index([frameworkId])
+  @@index([categoryId])
+  @@index([expenseDate])
+  @@map("expenses")
+}
+
+enum ExpenseType {
+  FIXED
+  OCCASIONAL
+}
+
+// העברות פנימיות
+model InternalTransfer {
+  id                String         @id @default(cuid())
+  sourceFrameworkId String
+  targetFrameworkId String
+  amount            Float
+  description       String
+  transferDate      DateTime
+  status            TransferStatus @default(PENDING)
+  createdAt         DateTime       @default(now())
+
+  sourceFramework Framework @relation("SourceFramework", fields: [sourceFrameworkId], references: [id])
+  targetFramework Framework @relation("TargetFramework", fields: [targetFrameworkId], references: [id])
+
+  @@index([sourceFrameworkId])
+  @@index([targetFrameworkId])
+  @@map("internal_transfers")
+}
+
+enum TransferStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
+
+// עובדים
+model Employee {
+  id          String   @id @default(cuid())
+  firstName   String
+  lastName    String
+  phone       String
+  role        String
+  frameworkId String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  framework Framework @relation(fields: [frameworkId], references: [id])
+  debts     Debt[]
+
+  @@index([frameworkId])
+  @@map("employees")
+}
+
+// חובות
+model Debt {
+  id         String     @id @default(cuid())
+  employeeId String
+  amount     Float
+  reason     String
+  debtType   DebtType
+  status     DebtStatus @default(OPEN)
+  paidAmount Float      @default(0)
+  dueDate    DateTime?
+  paidDate   DateTime?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([status])
+  @@map("debts")
+}
+
+enum DebtType {
+  ADVANCE
+  LOAN
+  EXPENSE_REFUND
+}
+
+enum DebtStatus {
+  OPEN
+  PAID
+  PARTIAL
+}
+
+// משתמשים
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         UserRole  @default(VIEWER)
+  isActive     Boolean   @default(true)
+  lastLogin    DateTime?
+  createdAt    DateTime  @default(now())
+
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  VIEWER
+}
+
+// לוג פעולות
+model AuditLog {
+  id           String   @id @default(cuid())
+  userId       String
+  action       String
+  entityType   String
+  entityId     String
+  previousData String?
+  newData      String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([entityType])
+  @@map("audit_logs")
+}
