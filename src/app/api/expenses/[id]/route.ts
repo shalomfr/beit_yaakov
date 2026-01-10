@@ -7,17 +7,19 @@ import { ExpenseService } from "@/services/expense.service";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const expense = await ExpenseService.getExpenseById(params.id);
+    const { id } = await params;
+    const expense = await ExpenseService.getExpenseById(id);
 
     return NextResponse.json({
       success: true,
       data: expense,
     });
   } catch (error: any) {
-    console.error(`GET /api/expenses/${params.id} error:`, error);
+    const { id } = await params;
+    console.error(`GET /api/expenses/${id} error:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -34,9 +36,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     // Validate amount if provided
@@ -71,7 +74,7 @@ export async function PUT(
     if (body.expenseType) updateData.expenseType = body.expenseType;
     if (body.receiptUrl !== undefined) updateData.receiptUrl = body.receiptUrl;
 
-    const expense = await ExpenseService.updateExpense(params.id, updateData);
+    const expense = await ExpenseService.updateExpense(id, updateData);
 
     return NextResponse.json({
       success: true,
@@ -79,7 +82,8 @@ export async function PUT(
       message: "Expense updated successfully",
     });
   } catch (error: any) {
-    console.error(`PUT /api/expenses/${params.id} error:`, error);
+    const { id } = await params;
+    console.error(`PUT /api/expenses/${id} error:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -96,17 +100,19 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await ExpenseService.deleteExpense(params.id);
+    const { id } = await params;
+    await ExpenseService.deleteExpense(id);
 
     return NextResponse.json({
       success: true,
       message: "Expense deleted successfully",
     });
   } catch (error: any) {
-    console.error(`DELETE /api/expenses/${params.id} error:`, error);
+    const { id } = await params;
+    console.error(`DELETE /api/expenses/${id} error:`, error);
     return NextResponse.json(
       {
         success: false,

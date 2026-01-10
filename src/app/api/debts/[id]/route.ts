@@ -7,17 +7,19 @@ import { DebtService } from "@/services/debt.service";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const debt = await DebtService.getDebtById(params.id);
+    const { id } = await params;
+    const debt = await DebtService.getDebtById(id);
 
     return NextResponse.json({
       success: true,
       data: debt,
     });
   } catch (error: any) {
-    console.error(`GET /api/debts/${params.id} error:`, error);
+    const { id } = await params;
+    console.error(`GET /api/debts/${id} error:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -34,9 +36,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     // Validate amount if provided
@@ -67,7 +70,7 @@ export async function PUT(
     if (body.debtType) updateData.debtType = body.debtType;
     if (body.dueDate !== undefined) updateData.dueDate = body.dueDate ? new Date(body.dueDate) : null;
 
-    const debt = await DebtService.updateDebt(params.id, updateData);
+    const debt = await DebtService.updateDebt(id, updateData);
 
     return NextResponse.json({
       success: true,
@@ -75,7 +78,8 @@ export async function PUT(
       message: "Debt updated successfully",
     });
   } catch (error: any) {
-    console.error(`PUT /api/debts/${params.id} error:`, error);
+    const { id } = await params;
+    console.error(`PUT /api/debts/${id} error:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -92,17 +96,19 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await DebtService.deleteDebt(params.id);
+    const { id } = await params;
+    await DebtService.deleteDebt(id);
 
     return NextResponse.json({
       success: true,
       message: "Debt deleted successfully",
     });
   } catch (error: any) {
-    console.error(`DELETE /api/debts/${params.id} error:`, error);
+    const { id } = await params;
+    console.error(`DELETE /api/debts/${id} error:`, error);
     return NextResponse.json(
       {
         success: false,

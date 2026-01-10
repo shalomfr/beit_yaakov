@@ -7,10 +7,11 @@ import { TransferService } from "@/services/transfer.service";
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const transfer = await TransferService.cancelTransfer(params.id);
+    const { id } = await params;
+    const transfer = await TransferService.cancelTransfer(id);
 
     return NextResponse.json({
       success: true,
@@ -18,7 +19,8 @@ export async function PUT(
       message: "Transfer cancelled successfully",
     });
   } catch (error: any) {
-    console.error(`PUT /api/transfers/${params.id}/cancel error:`, error);
+    const { id } = await params;
+    console.error(`PUT /api/transfers/${id}/cancel error:`, error);
     return NextResponse.json(
       {
         success: false,

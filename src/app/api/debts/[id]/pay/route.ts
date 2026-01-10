@@ -7,9 +7,10 @@ import { DebtService } from "@/services/debt.service";
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     // Validate required fields
@@ -34,7 +35,7 @@ export async function PUT(
       );
     }
 
-    const debt = await DebtService.payDebt(params.id, {
+    const debt = await DebtService.payDebt(id, {
       amount: parseFloat(body.amount),
       paidDate: new Date(body.paidDate),
     });
@@ -45,7 +46,8 @@ export async function PUT(
       message: "Payment recorded successfully",
     });
   } catch (error: any) {
-    console.error(`PUT /api/debts/${params.id}/pay error:`, error);
+    const { id } = await params;
+    console.error(`PUT /api/debts/${id}/pay error:`, error);
     return NextResponse.json(
       {
         success: false,

@@ -7,17 +7,19 @@ import { TransferService } from "@/services/transfer.service";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const transfer = await TransferService.getTransferById(params.id);
+    const { id } = await params;
+    const transfer = await TransferService.getTransferById(id);
 
     return NextResponse.json({
       success: true,
       data: transfer,
     });
   } catch (error: any) {
-    console.error(`GET /api/transfers/${params.id} error:`, error);
+    const { id } = await params;
+    console.error(`GET /api/transfers/${id} error:`, error);
     return NextResponse.json(
       {
         success: false,

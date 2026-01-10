@@ -7,17 +7,19 @@ import { EmployeeService } from "@/services/employee.service";
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const employee = await EmployeeService.getEmployeeById(params.id);
+    const { id } = await params;
+    const employee = await EmployeeService.getEmployeeById(id);
 
     return NextResponse.json({
       success: true,
       data: employee,
     });
   } catch (error: any) {
-    console.error(`GET /api/employees/${params.id} error:`, error);
+    const { id } = await params;
+    console.error(`GET /api/employees/${id} error:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -34,9 +36,10 @@ export async function GET(
  */
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
 
     const updateData: any = {};
@@ -47,7 +50,7 @@ export async function PUT(
     if (body.frameworkId) updateData.frameworkId = body.frameworkId;
     if (body.isActive !== undefined) updateData.isActive = body.isActive;
 
-    const employee = await EmployeeService.updateEmployee(params.id, updateData);
+    const employee = await EmployeeService.updateEmployee(id, updateData);
 
     return NextResponse.json({
       success: true,
@@ -55,7 +58,8 @@ export async function PUT(
       message: "Employee updated successfully",
     });
   } catch (error: any) {
-    console.error(`PUT /api/employees/${params.id} error:`, error);
+    const { id } = await params;
+    console.error(`PUT /api/employees/${id} error:`, error);
     return NextResponse.json(
       {
         success: false,
@@ -72,17 +76,19 @@ export async function PUT(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    await EmployeeService.deleteEmployee(params.id);
+    const { id } = await params;
+    await EmployeeService.deleteEmployee(id);
 
     return NextResponse.json({
       success: true,
       message: "Employee deleted successfully",
     });
   } catch (error: any) {
-    console.error(`DELETE /api/employees/${params.id} error:`, error);
+    const { id } = await params;
+    console.error(`DELETE /api/employees/${id} error:`, error);
     return NextResponse.json(
       {
         success: false,
