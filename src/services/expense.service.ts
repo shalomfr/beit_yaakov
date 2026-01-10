@@ -62,7 +62,6 @@ export class ExpenseService {
     if (filters?.search) {
       where.description = {
         contains: filters.search,
-        mode: "insensitive",
       };
     }
 
