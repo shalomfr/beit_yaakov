@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Heebo } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout";
+import { Providers } from "./providers";
 
 const heebo = Heebo({
   subsets: ["hebrew", "latin"],
@@ -21,17 +22,19 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" suppressHydrationWarning>
       <body className={`${heebo.variable} font-sans antialiased`}>
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
-          {/* Sidebar - Desktop */}
-          <div className="hidden lg:block">
-            <Sidebar />
-          </div>
+        <Providers>
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
+            {/* Sidebar - Desktop */}
+            <div className="hidden lg:block">
+              <Sidebar />
+            </div>
 
-          {/* Main Content */}
-          <main className="lg:mr-72">
-            {children}
-          </main>
-        </div>
+            {/* Main Content */}
+            <main className="lg:mr-72">
+              {children}
+            </main>
+          </div>
+        </Providers>
       </body>
     </html>
   );
