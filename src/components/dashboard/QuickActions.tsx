@@ -16,43 +16,45 @@ export function QuickActions({ onAddExpense, onAddTransfer, onAddDebt }: QuickAc
       label: "הוסף הוצאה",
       icon: Plus,
       onClick: onAddExpense,
-      color: "bg-blue-500 hover:bg-blue-600",
+      gradient: "bg-gradient-to-br from-blue-500 to-cyan-600 hover:from-blue-600 hover:to-cyan-700",
     },
     {
       label: "העברה חדשה",
       icon: ArrowLeftRight,
       onClick: onAddTransfer,
-      color: "bg-emerald-500 hover:bg-emerald-600",
+      gradient: "bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700",
     },
     {
       label: "רשום חוב",
       icon: Wallet,
       onClick: onAddDebt,
-      color: "bg-amber-500 hover:bg-amber-600",
+      gradient: "bg-gradient-to-br from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700",
     },
     {
       label: "הפק דוח",
       icon: FileText,
       onClick: () => {},
-      color: "bg-purple-500 hover:bg-purple-600",
+      gradient: "bg-gradient-to-br from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700",
     },
   ];
 
   return (
-    <Card>
+    <Card className="shadow-lg border-0">
       <CardHeader>
-        <CardTitle className="text-lg">פעולות מהירות</CardTitle>
+        <CardTitle className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent">
+          פעולות מהירות
+        </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-4">
           {actions.map((action) => (
             <Button
               key={action.label}
               onClick={action.onClick}
-              className={`h-auto flex-col gap-2 py-4 ${action.color} text-white`}
+              className={`h-auto flex-col gap-3 py-6 ${action.gradient} text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border-0`}
             >
-              <action.icon className="h-5 w-5" />
-              <span className="text-sm">{action.label}</span>
+              <action.icon className="h-6 w-6" />
+              <span className="text-sm font-semibold">{action.label}</span>
             </Button>
           ))}
         </div>

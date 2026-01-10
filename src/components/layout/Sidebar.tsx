@@ -11,6 +11,7 @@ import {
   Users,
   Building2,
 } from "lucide-react";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 const navigation = [
   {
@@ -44,21 +45,23 @@ export function Sidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="fixed right-0 top-0 z-40 h-screen w-64 bg-sidebar text-sidebar-foreground">
+    <aside className="fixed right-0 top-0 z-40 h-screen w-72 bg-gradient-to-b from-slate-900 to-slate-800 text-white shadow-2xl">
       {/* Logo */}
-      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sidebar-primary">
-          <Building2 className="h-5 w-5 text-sidebar-primary-foreground" />
+      <div className="flex h-20 items-center gap-3 px-6 border-b border-white/10">
+        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-cyan-500 shadow-lg shadow-blue-500/50">
+          <Building2 className="h-6 w-6 text-white" />
         </div>
         <div>
-          <h1 className="text-lg font-bold">בית יעקב</h1>
-          <p className="text-xs text-sidebar-foreground/70">ניהול פיננסי</p>
+          <h1 className="text-xl font-bold bg-gradient-to-r from-white to-blue-200 bg-clip-text text-transparent">
+            בית יעקב
+          </h1>
+          <p className="text-xs text-slate-400">ניהול פיננסי</p>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="mt-6 px-3">
-        <ul className="space-y-1">
+      <nav className="mt-8 px-4">
+        <ul className="space-y-2">
           {navigation.map((item) => {
             const isActive = pathname === item.href;
             return (
@@ -66,13 +69,16 @@ export function Sidebar() {
                 <Link
                   href={item.href}
                   className={cn(
-                    "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
+                    "group flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200",
                     isActive
-                      ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                      : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                      ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg shadow-blue-500/30"
+                      : "text-slate-300 hover:bg-white/10 hover:text-white"
                   )}
                 >
-                  <item.icon className="h-5 w-5" />
+                  <item.icon className={cn(
+                    "h-5 w-5 transition-transform group-hover:scale-110",
+                    isActive && "text-white"
+                  )} />
                   <span>{item.name}</span>
                 </Link>
               </li>
@@ -82,14 +88,16 @@ export function Sidebar() {
       </nav>
 
       {/* Footer */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-sidebar-border p-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-sidebar-accent text-sm font-medium">
-            מנ
-          </div>
+      <div className="absolute bottom-0 left-0 right-0 border-t border-white/10 p-5">
+        <div className="flex items-center gap-3 rounded-xl bg-white/5 p-3 backdrop-blur-sm">
+          <Avatar className="h-10 w-10 border-2 border-white/20">
+            <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white text-sm font-bold">
+              מנ
+            </AvatarFallback>
+          </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium truncate">מנהל המערכת</p>
-            <p className="text-xs text-sidebar-foreground/70 truncate">admin@beityaakov.org</p>
+            <p className="text-sm font-semibold truncate">מנהל המערכת</p>
+            <p className="text-xs text-slate-400 truncate">admin@beityaakov.org</p>
           </div>
         </div>
       </div>

@@ -72,14 +72,14 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
   }));
 
   return (
-    <Card className="col-span-full lg:col-span-2">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
+    <Card className="col-span-full lg:col-span-2 shadow-lg border-0">
+      <CardHeader className="border-b pb-4">
+        <CardTitle className="text-xl font-bold bg-gradient-to-r from-slate-900 to-slate-600 bg-clip-text text-transparent flex items-center gap-2">
           <span>📊</span>
           התפלגות הוצאות לפי קטגוריות
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-6">
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
@@ -87,12 +87,13 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
               layout="vertical"
               margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
             >
-              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke="#e2e8f0" />
               <XAxis
                 type="number"
                 tickFormatter={(value) => `₪${(value / 1000).toFixed(0)}K`}
                 axisLine={false}
                 tickLine={false}
+                tick={{ fill: '#64748b', fontSize: 12 }}
               />
               <YAxis
                 type="category"
@@ -100,10 +101,10 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
                 axisLine={false}
                 tickLine={false}
                 width={80}
-                tick={{ fontSize: 12 }}
+                tick={{ fill: '#1e293b', fontSize: 13, fontWeight: 600 }}
               />
               <Tooltip content={<CustomTooltip />} />
-              <Bar dataKey="amount" radius={[0, 6, 6, 0]} maxBarSize={40}>
+              <Bar dataKey="amount" radius={[0, 8, 8, 0]} maxBarSize={40}>
                 {chartData.map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
@@ -111,17 +112,17 @@ export function ExpenseChart({ data }: ExpenseChartProps) {
             </BarChart>
           </ResponsiveContainer>
         </div>
-        
+
         {/* Legend */}
-        <div className="mt-4 flex flex-wrap gap-4 justify-center">
+        <div className="mt-6 flex flex-wrap gap-4 justify-center">
           {chartData.map((item, index) => (
-            <div key={index} className="flex items-center gap-2">
+            <div key={index} className="flex items-center gap-2 bg-slate-50 px-3 py-2 rounded-lg">
               <div
-                className="h-3 w-3 rounded-full"
+                className="h-3 w-3 rounded-full shadow-sm"
                 style={{ backgroundColor: item.color }}
               />
-              <span className="text-sm text-muted-foreground">
-                {item.name} ({item.percentage.toFixed(0)}%)
+              <span className="text-sm font-medium text-slate-700">
+                {item.name} <span className="text-slate-500">({item.percentage.toFixed(0)}%)</span>
               </span>
             </div>
           ))}

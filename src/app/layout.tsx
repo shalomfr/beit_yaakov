@@ -21,14 +21,14 @@ export default function RootLayout({
   return (
     <html lang="he" dir="rtl" suppressHydrationWarning>
       <body className={`${heebo.variable} font-sans antialiased`}>
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
           {/* Sidebar - Desktop */}
           <div className="hidden lg:block">
             <Sidebar />
           </div>
-          
+
           {/* Main Content */}
-          <main className="lg:mr-64">
+          <main className="lg:mr-72">
             {children}
           </main>
         </div>

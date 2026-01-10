@@ -7,13 +7,14 @@ generator client {
 
 datasource db {
   provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 // מסגרות - גנים / בית ספר
 model Framework {
   id             String   @id @default(cuid())
   name           String
-  type           FrameworkType
+  type           String   // Valid values: "KINDERGARTEN", "SCHOOL"
   currentBalance Float    @default(0)
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
@@ -26,15 +27,12 @@ model Framework {
   @@map("frameworks")
 }
 
-enum FrameworkType {
-  KINDERGARTEN
-  SCHOOL
-}
+// FrameworkType values: KINDERGARTEN, SCHOOL
 
 // קטגוריות הוצאה
 model Category {
   id        String   @id @default(cuid())
-  name      String
+  name      String   @unique
   icon      String   @default("📁")
   color     String   @default("#6366f1")
   isActive  Boolean  @default(true)
@@ -53,7 +51,7 @@ model Expense {
   amount      Float
   description String
   expenseDate DateTime
-  expenseType ExpenseType
+  expenseType String      // Valid values: "FIXED", "OCCASIONAL"
   receiptUrl  String?
   createdAt   DateTime    @default(now())
   updatedAt   DateTime    @updatedAt
@@ -67,10 +65,7 @@ model Expense {
   @@map("expenses")
 }
 
-enum ExpenseType {
-  FIXED
-  OCCASIONAL
-}
+// ExpenseType values: FIXED, OCCASIONAL
 
 // העברות פנימיות
 model InternalTransfer {
@@ -80,7 +75,7 @@ model InternalTransfer {
   amount            Float
   description       String
   transferDate      DateTime
-  status            TransferStatus @default(PENDING)
+  status            String         @default("PENDING") // Valid values: "PENDING", "COMPLETED", "CANCELLED"
   createdAt         DateTime       @default(now())
 
   sourceFramework Framework @relation("SourceFramework", fields: [sourceFrameworkId], references: [id])
@@ -91,18 +86,14 @@ model InternalTransfer {
   @@map("internal_transfers")
 }
 
-enum TransferStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
-}
+// TransferStatus values: PENDING, COMPLETED, CANCELLED
 
 // עובדים
 model Employee {
   id          String   @id @default(cuid())
   firstName   String
   lastName    String
-  phone       String
+  phone       String   @unique
   role        String
   frameworkId String
   isActive    Boolean  @default(true)
@@ -121,8 +112,8 @@ model Debt {
   employeeId String
   amount     Float
   reason     String
-  debtType   DebtType
-  status     DebtStatus @default(OPEN)
+  debtType   String     // Valid values: "ADVANCE", "LOAN", "EXPENSE_REFUND"
+  status     String     @default("OPEN") // Valid values: "OPEN", "PAID", "PARTIAL"
   paidAmount Float      @default(0)
   dueDate    DateTime?
   paidDate   DateTime?
@@ -136,17 +127,8 @@ model Debt {
   @@map("debts")
 }
 
-enum DebtType {
-  ADVANCE
-  LOAN
-  EXPENSE_REFUND
-}
-
-enum DebtStatus {
-  OPEN
-  PAID
-  PARTIAL
-}
+// DebtType values: ADVANCE, LOAN, EXPENSE_REFUND
+// DebtStatus values: OPEN, PAID, PARTIAL
 
 // משתמשים
 model User {
@@ -154,7 +136,7 @@ model User {
   email        String    @unique
   passwordHash String
   name         String
-  role         UserRole  @default(VIEWER)
+  role         String    @default("VIEWER") // Valid values: "ADMIN", "MANAGER", "VIEWER"
   isActive     Boolean   @default(true)
   lastLogin    DateTime?
   createdAt    DateTime  @default(now())
@@ -164,11 +146,7 @@ model User {
   @@map("users")
 }
 
-enum UserRole {
-  ADMIN
-  MANAGER
-  VIEWER
-}
+// UserRole values: ADMIN, MANAGER, VIEWER
 
 // לוג פעולות
 model AuditLog {

@@ -76,12 +76,12 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen">
-      <Header 
-        title="דשבורד הוצאות" 
-        subtitle="תמונת מצב יומית" 
+      <Header
+        title="דשבורד הוצאות"
+        subtitle="תמונת מצב יומית"
       />
-      
-      <div className="p-6 space-y-6">
+
+      <div className="p-8 space-y-8 max-w-[1800px] mx-auto">
         {/* Stats Cards */}
         <StatsCards
           kindergartenTotal={52800}

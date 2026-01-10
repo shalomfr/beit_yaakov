@@ -17,20 +17,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useEmployees } from "@/hooks/useEmployees";
+import { useCreateDebt } from "@/hooks/useDebts";
+import { Loader2 } from "lucide-react";
 
 interface AddDebtDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
-
-// Demo employees
-const demoEmployees = [
-  { id: "e1", name: "שרה כהן", role: "גננת" },
-  { id: "e2", name: "רחל לוי", role: "סייעת" },
-  { id: "e3", name: "מרים אברהם", role: "מורה" },
-  { id: "e4", name: "יעל גולדשטיין", role: "סייעת" },
-  { id: "e5", name: "דינה פרידמן", role: "גננת" },
-];
 
 const debtTypes = [
   { id: "ADVANCE", name: "מקדמה על משכורת", icon: "💰" },
@@ -39,7 +33,9 @@ const debtTypes = [
 ];
 
 export function AddDebtDialog({ open, onOpenChange }: AddDebtDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: employees = [], isLoading: isLoadingEmployees } = useEmployees();
+  const createDebt = useCreateDebt();
+
   const [formData, setFormData] = useState({
     employeeId: "",
     amount: "",
@@ -50,11 +46,16 @@ export function AddDebtDialog({ open, onOpenChange }: AddDebtDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
-    
+
     try {
-      // TODO: Implement API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      await createDebt.mutateAsync({
+        employeeId: formData.employeeId,
+        amount: parseFloat(formData.amount),
+        reason: formData.reason,
+        debtType: formData.debtType as "ADVANCE" | "LOAN" | "EXPENSE_REFUND",
+        dueDate: formData.dueDate || undefined,
+      });
+
       onOpenChange(false);
       setFormData({
         employeeId: "",
@@ -65,8 +66,6 @@ export function AddDebtDialog({ open, onOpenChange }: AddDebtDialogProps) {
       });
     } catch (error) {
       console.error("Error adding debt:", error);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -84,15 +83,18 @@ export function AddDebtDialog({ open, onOpenChange }: AddDebtDialogProps) {
             <Select
               value={formData.employeeId}
               onValueChange={(value) => setFormData({ ...formData, employeeId: value })}
+              disabled={isLoadingEmployees}
             >
               <SelectTrigger>
-                <SelectValue placeholder="בחר עובד/ת" />
+                <SelectValue placeholder={isLoadingEmployees ? "טוען..." : "בחר עובד/ת"} />
               </SelectTrigger>
               <SelectContent>
-                {demoEmployees.map((employee) => (
+                {employees.map((employee) => (
                   <SelectItem key={employee.id} value={employee.id}>
                     <span className="flex items-center gap-2">
-                      <span className="font-medium">{employee.name}</span>
+                      <span className="font-medium">
+                        {employee.firstName} {employee.lastName}
+                      </span>
                       <span className="text-muted-foreground">({employee.role})</span>
                     </span>
                   </SelectItem>
@@ -164,12 +166,19 @@ export function AddDebtDialog({ open, onOpenChange }: AddDebtDialogProps) {
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
-              disabled={isLoading}
+              disabled={createDebt.isPending}
             >
               ביטול
             </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "שומר..." : "רשום חוב"}
+            <Button type="submit" disabled={createDebt.isPending}>
+              {createDebt.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  שומר...
+                </>
+              ) : (
+                "רשום חוב"
+              )}
             </Button>
           </DialogFooter>
         </form>
