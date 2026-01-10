@@ -13,7 +13,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: DATABASE_URL
-        value: file:/opt/render/project/src/prisma/prod.db
+        value: postgresql://beit_yaakov_user:JGytZe2XZRUtLeFSVoZVfFNN8MKpIL7W@dpg-d5e4tqmr433s73f6uceg-a.oregon-postgres.render.com/beit_yaakov
       - key: NEXTAUTH_SECRET
         generateValue: true
       - key: NEXTAUTH_URL
