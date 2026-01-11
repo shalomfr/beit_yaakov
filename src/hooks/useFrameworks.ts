@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export interface Framework {
   id: string;
@@ -33,5 +33,34 @@ export function useFramework(id: string) {
       return data.data as Framework;
     },
     enabled: !!id,
+  });
+}
+
+// Update framework
+export function useUpdateFramework() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: { name?: string; currentBalance?: number };
+    }) => {
+      const response = await fetch(`/api/frameworks/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update framework");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["frameworks"] });
+    },
   });
 }

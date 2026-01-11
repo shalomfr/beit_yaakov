@@ -34,8 +34,9 @@ import {
   Info
 } from "lucide-react";
 import { useCategories, Category } from "@/hooks/useCategories";
-import { useFrameworks } from "@/hooks/useFrameworks";
+import { useFrameworks, Framework } from "@/hooks/useFrameworks";
 import { CategoryDialog } from "@/components/settings/CategoryDialog";
+import { EditFrameworkDialog } from "@/components/settings/EditFrameworkDialog";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTourStore } from "@/stores/useTourStore";
 import { toast } from "sonner";
@@ -49,6 +50,10 @@ export default function SettingsPage() {
   // Category dialog state
   const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+  // Framework dialog state
+  const [frameworkDialogOpen, setFrameworkDialogOpen] = useState(false);
+  const [selectedFramework, setSelectedFramework] = useState<Framework | null>(null);
 
   // Delete confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -114,6 +119,11 @@ export default function SettingsPage() {
     toast.success("הסיור המודרך יופעל מחדש");
   };
 
+  const handleEditFramework = (framework: Framework) => {
+    setSelectedFramework(framework);
+    setFrameworkDialogOpen(true);
+  };
+
   const getFrameworkIcon = (type: string) => {
     return type === "KINDERGARTEN" ? Building2 : GraduationCap;
   };
@@ -148,19 +158,30 @@ export default function SettingsPage() {
                 {frameworks.map((framework) => {
                   const IconComponent = getFrameworkIcon(framework.type);
                   return (
-                    <div key={framework.id} className="flex items-center justify-between p-4 rounded-lg border">
+                    <div key={framework.id} className="flex items-center justify-between p-4 rounded-lg border hover:bg-muted/50 transition-colors">
                       <div className="flex items-center gap-3">
                         <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${getFrameworkColor(framework.type)}`}>
                           <IconComponent className="h-5 w-5" />
                         </div>
                         <div>
                           <p className="font-medium">{framework.name}</p>
-                          <p className="text-sm text-muted-foreground">{framework.type}</p>
+                          <p className="text-sm text-muted-foreground">
+                            {framework.type === "KINDERGARTEN" ? "גנים" : "בית ספר"}
+                          </p>
                         </div>
                       </div>
-                      <div className="text-left">
-                        <p className="font-medium">₪{framework.currentBalance.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">יתרה</p>
+                      <div className="flex items-center gap-3">
+                        <div className="text-left">
+                          <p className="font-medium">₪{framework.currentBalance.toLocaleString()}</p>
+                          <p className="text-xs text-muted-foreground">יתרה</p>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleEditFramework(framework)}
+                        >
+                          <Edit className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   );
@@ -406,6 +427,13 @@ export default function SettingsPage() {
         open={categoryDialogOpen}
         onOpenChange={setCategoryDialogOpen}
         category={selectedCategory}
+      />
+
+      {/* Framework Dialog */}
+      <EditFrameworkDialog
+        open={frameworkDialogOpen}
+        onOpenChange={setFrameworkDialogOpen}
+        framework={selectedFramework}
       />
 
       {/* Delete Confirmation Dialog */}
