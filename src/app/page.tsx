@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Header } from "@/components/layout";
 import { StatsCards, ExpenseChart, RecentExpenses, QuickActions } from "@/components/dashboard";
 import { AddExpenseDialog } from "@/components/expenses/AddExpenseDialog";
@@ -63,6 +64,7 @@ const demoChartData = [
 ];
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -98,8 +100,8 @@ export default function DashboardPage() {
           <ExpenseChart data={demoChartData} />
           <QuickActions
             onAddExpense={() => setIsAddExpenseOpen(true)}
-            onAddTransfer={() => {}}
-            onAddDebt={() => {}}
+            onAddTransfer={() => router.push("/transfers")}
+            onAddDebt={() => router.push("/debts")}
           />
         </div>
 
