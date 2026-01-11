@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeftRight, Wallet, FileText } from "lucide-react";
-import { ComingSoonDialog } from "@/components/tour/ComingSoonDialog";
+import { ReportsDialog } from "@/components/reports/ReportsDialog";
 
 interface QuickActionsProps {
   onAddExpense: () => void;
@@ -70,10 +70,9 @@ export function QuickActions({ onAddExpense, onAddTransfer, onAddDebt }: QuickAc
           </div>
         </CardContent>
       </Card>
-      <ComingSoonDialog
+      <ReportsDialog
         open={showReportsDialog}
         onOpenChange={setShowReportsDialog}
-        feature="מערכת הדוחות"
       />
     </>
   );

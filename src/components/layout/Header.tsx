@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Bell, Search, Menu, Settings as SettingsIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +23,8 @@ interface HeaderProps {
 }
 
 export function Header({ title, subtitle }: HeaderProps) {
+  const router = useRouter();
+
   return (
     <header className="sticky top-0 z-30 border-b border-white/20 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 shadow-sm">
       <div className="flex h-20 items-center gap-4 px-6">
@@ -104,6 +107,7 @@ export function Header({ title, subtitle }: HeaderProps) {
             variant="ghost"
             size="icon"
             className="hidden md:flex rounded-full hover:bg-slate-100"
+            onClick={() => router.push("/settings")}
           >
             <SettingsIcon className="h-5 w-5 text-slate-600" />
           </Button>

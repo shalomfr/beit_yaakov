@@ -16,6 +16,7 @@ interface TourState {
   loadDemoData: () => void;
   resetTour: () => void;
   closeWelcomeModal: () => void;
+  setShowWelcomeModal: (show: boolean) => void;
 }
 
 export const useTourStore = create<TourState>()(
@@ -34,6 +35,7 @@ export const useTourStore = create<TourState>()(
       loadDemoData: () => set({ hasDemoData: true }),
       resetTour: () => set({ hasSeenTour: false, isTourActive: false, currentStep: 0, showWelcomeModal: true }),
       closeWelcomeModal: () => set({ showWelcomeModal: false }),
+      setShowWelcomeModal: (show) => set({ showWelcomeModal: show }),
     }),
     {
       name: 'beit-yaakov-tour-state',

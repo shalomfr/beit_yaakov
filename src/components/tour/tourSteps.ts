@@ -1,6 +1,11 @@
 import { Step } from 'react-joyride';
 
-export const tourSteps: Step[] = [
+export interface ExtendedStep extends Step {
+  isInteractive?: boolean;
+  actionType?: 'click' | 'navigate';
+}
+
+export const tourSteps: ExtendedStep[] = [
   {
     target: 'body',
     content: 'ברוכים הבאים למערכת ניהול הכספים של בית יעקב! בואו נעשה סיור מהיר ונלמד איך להשתמש במערכת.',
@@ -34,23 +39,44 @@ export const tourSteps: Step[] = [
   },
   {
     target: '[data-tour="quick-actions"]',
-    content: 'פעולות מהירות לשימוש יומיומי - הוספת הוצאה, העברות בין מסגרות, רישום חובות ודוחות.',
+    content: 'פעולות מהירות לשימוש יומיומי - כעת נלמד על כל אחת מהפעולות.',
     placement: 'left',
   },
   {
     target: '[data-tour="add-expense-btn"]',
-    content: 'לחצו כאן כדי להוסיף הוצאה חדשה. תוכלו לבחור מסגרת (גן/בי"ס), קטגוריה, סכום ותאריך.',
+    content: '👆 נסה עכשיו! לחץ על כפתור זה כדי להוסיף הוצאה חדשה. תוכל לבחור מסגרת, קטגוריה, סכום ותאריך.',
     placement: 'bottom',
+    spotlightClicks: true,
+    hideFooter: true,
+    isInteractive: true,
+    actionType: 'click',
   },
   {
     target: '[data-tour="transfers-btn"]',
-    content: 'כפתור זה מאפשר לבצע העברות כספים בין מסגרות - למשל מבית הספר לגנים.',
+    content: '👆 נסה עכשיו! לחץ כדי לבצע העברת כספים בין מסגרות - למשל מבית הספר לגנים.',
     placement: 'bottom',
+    spotlightClicks: true,
+    hideFooter: true,
+    isInteractive: true,
+    actionType: 'click',
   },
   {
     target: '[data-tour="debts-btn"]',
-    content: 'כאן תוכלו לרשום ולעקוב אחר חובות עובדים - מקדמות, הלוואות והחזרי הוצאות.',
+    content: '👆 נסה עכשיו! לחץ כדי לרשום ולעקוב אחר חובות עובדים - מקדמות, הלוואות והחזרים.',
     placement: 'bottom',
+    spotlightClicks: true,
+    hideFooter: true,
+    isInteractive: true,
+    actionType: 'click',
+  },
+  {
+    target: '[data-tour="reports-btn"]',
+    content: '👆 נסה עכשיו! לחץ כדי להפיק דוחות מפורטים - חודשיים, לפי מסגרת, קטגוריה ועוד.',
+    placement: 'bottom',
+    spotlightClicks: true,
+    hideFooter: true,
+    isInteractive: true,
+    actionType: 'click',
   },
   {
     target: '[data-tour="recent-expenses"]',
@@ -69,7 +95,12 @@ export const tourSteps: Step[] = [
   },
   {
     target: 'body',
-    content: 'זהו! סיימנו את הסיור. האם תרצו לטעון נתוני דמו לתרגול? תוכלו תמיד לאפס אותם בהגדרות.',
+    content: 'מעולה! סיימנו את הסיור. עכשיו אתה מוכן להתחיל להשתמש במערכת. בהצלחה!',
     placement: 'center',
   },
 ];
+
+// Get indices of interactive steps
+export const interactiveStepIndices = tourSteps
+  .map((step, index) => step.isInteractive ? index : -1)
+  .filter(index => index !== -1);

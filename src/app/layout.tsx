@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
-import { Heebo } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout";
 import { Providers } from "./providers";
-
-const heebo = Heebo({
-  subsets: ["hebrew", "latin"],
-  variable: "--font-heebo",
-});
 
 export const metadata: Metadata = {
   title: "בית יעקב - ניהול פיננסי",
@@ -21,7 +15,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="he" dir="rtl" suppressHydrationWarning>
-      <body className={`${heebo.variable} font-sans antialiased`}>
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=Heebo:wght@100;200;300;400;500;600;700;800;900&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body className="antialiased">
         <Providers>
           <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-slate-50">
             {/* Sidebar - Desktop */}

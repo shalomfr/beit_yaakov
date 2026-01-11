@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Users, Plus, Search, Phone, Building2, GraduationCap, Edit, MoreHorizontal } from "lucide-react";
+import { Users, Plus, Search, Phone, Building2, GraduationCap, Edit, MoreHorizontal, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,17 +23,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-
-// Demo data
-const demoEmployees = [
-  { id: "1", firstName: "שרה", lastName: "כהן", phone: "050-1234567", role: "גננת", framework: { name: "גנים", type: "KINDERGARTEN" }, isActive: true },
-  { id: "2", firstName: "רחל", lastName: "לוי", phone: "052-9876543", role: "סייעת", framework: { name: "גנים", type: "KINDERGARTEN" }, isActive: true },
-  { id: "3", firstName: "מרים", lastName: "אברהם", phone: "054-5551234", role: "מורה למתמטיקה", framework: { name: "בית ספר", type: "SCHOOL" }, isActive: true },
-  { id: "4", firstName: "יעל", lastName: "גולדשטיין", phone: "050-7778899", role: "סייעת", framework: { name: "בית ספר", type: "SCHOOL" }, isActive: true },
-  { id: "5", firstName: "דינה", lastName: "פרידמן", phone: "053-4445566", role: "גננת", framework: { name: "גנים", type: "KINDERGARTEN" }, isActive: true },
-  { id: "6", firstName: "לאה", lastName: "שמעוני", phone: "050-1112233", role: "מורה לעברית", framework: { name: "בית ספר", type: "SCHOOL" }, isActive: true },
-  { id: "7", firstName: "חנה", lastName: "דוד", phone: "052-4445556", role: "סייעת", framework: { name: "גנים", type: "KINDERGARTEN" }, isActive: false },
-];
+import { useEmployees, useUpdateEmployee, Employee } from "@/hooks/useEmployees";
+import { EmployeeDialog } from "@/components/employees/EmployeeDialog";
 
 const getInitials = (firstName: string, lastName: string) => {
   return `${firstName.charAt(0)}${lastName.charAt(0)}`;
@@ -42,23 +33,64 @@ const getInitials = (firstName: string, lastName: string) => {
 export default function EmployeesPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "kindergarten" | "school">("all");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
-  const filteredEmployees = demoEmployees.filter((employee) => {
-    const matchesSearch = 
+  const { data: employees = [], isLoading, error } = useEmployees();
+  const updateEmployee = useUpdateEmployee();
+
+  const filteredEmployees = employees.filter((employee) => {
+    const matchesSearch =
       employee.firstName.includes(searchQuery) ||
       employee.lastName.includes(searchQuery) ||
       employee.role.includes(searchQuery) ||
       employee.phone.includes(searchQuery);
-    
+
     if (filter === "all") return matchesSearch;
-    if (filter === "kindergarten") return matchesSearch && employee.framework.type === "KINDERGARTEN";
-    if (filter === "school") return matchesSearch && employee.framework.type === "SCHOOL";
+    if (filter === "kindergarten") return matchesSearch && employee.framework?.type === "KINDERGARTEN";
+    if (filter === "school") return matchesSearch && employee.framework?.type === "SCHOOL";
     return matchesSearch;
   });
 
-  const kindergartenCount = demoEmployees.filter((e) => e.framework.type === "KINDERGARTEN" && e.isActive).length;
-  const schoolCount = demoEmployees.filter((e) => e.framework.type === "SCHOOL" && e.isActive).length;
-  const totalActive = demoEmployees.filter((e) => e.isActive).length;
+  const kindergartenCount = employees.filter((e) => e.framework?.type === "KINDERGARTEN" && e.isActive).length;
+  const schoolCount = employees.filter((e) => e.framework?.type === "SCHOOL" && e.isActive).length;
+  const totalActive = employees.filter((e) => e.isActive).length;
+
+  const handleAddEmployee = () => {
+    setEditingEmployee(null);
+    setIsDialogOpen(true);
+  };
+
+  const handleEditEmployee = (employee: Employee) => {
+    setEditingEmployee(employee);
+    setIsDialogOpen(true);
+  };
+
+  const handleToggleActive = async (employee: Employee) => {
+    try {
+      await updateEmployee.mutateAsync({
+        id: employee.id,
+        data: { isActive: !employee.isActive },
+      });
+    } catch (error) {
+      console.error("Failed to toggle employee status:", error);
+    }
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen">
+        <Header title="ניהול עובדים" subtitle="רשימת כל העובדים במערכת" />
+        <div className="p-6">
+          <Card>
+            <CardContent className="p-8 text-center">
+              <p className="text-red-600">שגיאה בטעינת העובדים</p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -151,95 +183,127 @@ export default function EmployeesPage() {
                   בי״ס
                 </button>
               </div>
-              <Button>
+              <Button onClick={handleAddEmployee}>
                 <Plus className="h-4 w-4 ml-2" />
                 הוסף עובד
               </Button>
             </div>
           </CardHeader>
           <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>עובד/ת</TableHead>
-                  <TableHead>תפקיד</TableHead>
-                  <TableHead>מסגרת</TableHead>
-                  <TableHead>טלפון</TableHead>
-                  <TableHead>סטטוס</TableHead>
-                  <TableHead className="w-[50px]"></TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredEmployees.map((employee) => (
-                  <TableRow key={employee.id}>
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar>
-                          <AvatarFallback className="bg-primary text-primary-foreground">
-                            {getInitials(employee.firstName, employee.lastName)}
-                          </AvatarFallback>
-                        </Avatar>
-                        <span className="font-medium">
-                          {employee.firstName} {employee.lastName}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell>{employee.role}</TableCell>
-                    <TableCell>
-                      <div className={cn(
-                        "inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium",
-                        employee.framework.type === "SCHOOL"
-                          ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
-                          : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
-                      )}>
-                        {employee.framework.type === "SCHOOL" ? (
-                          <GraduationCap className="h-4 w-4" />
-                        ) : (
-                          <Building2 className="h-4 w-4" />
-                        )}
-                        {employee.framework.name}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-muted-foreground">
-                        <Phone className="h-4 w-4" />
-                        {employee.phone}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {employee.isActive ? (
-                        <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
-                          פעיל
-                        </Badge>
-                      ) : (
-                        <Badge variant="secondary">לא פעיל</Badge>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start">
-                          <DropdownMenuItem>
-                            <Edit className="h-4 w-4 ml-2" />
-                            עריכה
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
-                            השבת עובד
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : filteredEmployees.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">
+                  {employees.length === 0
+                    ? "אין עובדים במערכת. לחץ על 'הוסף עובד' להתחיל."
+                    : "לא נמצאו עובדים התואמים את החיפוש."}
+                </p>
+                {employees.length === 0 && (
+                  <Button onClick={handleAddEmployee} className="mt-4">
+                    <Plus className="h-4 w-4 ml-2" />
+                    הוסף עובד ראשון
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>עובד/ת</TableHead>
+                    <TableHead>תפקיד</TableHead>
+                    <TableHead>מסגרת</TableHead>
+                    <TableHead>טלפון</TableHead>
+                    <TableHead>סטטוס</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredEmployees.map((employee) => (
+                    <TableRow key={employee.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-3">
+                          <Avatar>
+                            <AvatarFallback className="bg-primary text-primary-foreground">
+                              {getInitials(employee.firstName, employee.lastName)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <span className="font-medium">
+                            {employee.firstName} {employee.lastName}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell>{employee.role}</TableCell>
+                      <TableCell>
+                        {employee.framework && (
+                          <div className={cn(
+                            "inline-flex items-center gap-2 px-3 py-1 rounded-md text-sm font-medium",
+                            employee.framework.type === "SCHOOL"
+                              ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+                              : "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                          )}>
+                            {employee.framework.type === "SCHOOL" ? (
+                              <GraduationCap className="h-4 w-4" />
+                            ) : (
+                              <Building2 className="h-4 w-4" />
+                            )}
+                            {employee.framework.name}
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Phone className="h-4 w-4" />
+                          {employee.phone}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {employee.isActive ? (
+                          <Badge className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                            פעיל
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary">לא פעיל</Badge>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="start">
+                            <DropdownMenuItem onClick={() => handleEditEmployee(employee)}>
+                              <Edit className="h-4 w-4 ml-2" />
+                              עריכה
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleToggleActive(employee)}
+                              className={employee.isActive ? "text-destructive" : "text-green-600"}
+                            >
+                              {employee.isActive ? "השבת עובד" : "הפעל עובד"}
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      <EmployeeDialog
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        employee={editingEmployee}
+      />
     </div>
   );
 }

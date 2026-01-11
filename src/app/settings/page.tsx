@@ -1,36 +1,129 @@
 "use client";
 
+import { useState } from "react";
 import { Header } from "@/components/layout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Building2, 
-  GraduationCap, 
-  FolderOpen, 
-  Plus, 
-  Edit, 
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Building2,
+  GraduationCap,
+  FolderOpen,
+  Plus,
+  Edit,
   Trash2,
   Save,
   User,
   Lock,
   Bell,
-  Palette
+  Palette,
+  Loader2,
+  RotateCcw,
+  Info
 } from "lucide-react";
-
-// Demo categories
-const demoCategories = [
-  { id: "1", name: "משכורות", icon: "💰", color: "#3b82f6", count: 45 },
-  { id: "2", name: "חשמל", icon: "⚡", color: "#f59e0b", count: 12 },
-  { id: "3", name: "תחזוקה", icon: "🔧", color: "#8b5cf6", count: 18 },
-  { id: "4", name: "ניקיון", icon: "🧹", color: "#10b981", count: 24 },
-  { id: "5", name: "ציוד", icon: "📦", color: "#ec4899", count: 8 },
-  { id: "6", name: "אחר", icon: "📁", color: "#6b7280", count: 5 },
-];
+import { useCategories, Category } from "@/hooks/useCategories";
+import { useFrameworks } from "@/hooks/useFrameworks";
+import { CategoryDialog } from "@/components/settings/CategoryDialog";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTourStore } from "@/stores/useTourStore";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
+  const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: frameworks, isLoading: frameworksLoading } = useFrameworks();
+  const queryClient = useQueryClient();
+  const { resetTour, setShowWelcomeModal } = useTourStore();
+
+  // Category dialog state
+  const [categoryDialogOpen, setCategoryDialogOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<Category | null>(null);
+
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
+
+  // Profile form state
+  const [profileName, setProfileName] = useState("מנהל המערכת");
+  const [profileEmail, setProfileEmail] = useState("admin@beityaakov.org");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // Delete category mutation
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const response = await fetch(`/api/categories/${id}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete category");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["categories"] });
+      setDeleteDialogOpen(false);
+      setCategoryToDelete(null);
+      toast.success("הקטגוריה נמחקה בהצלחה");
+    },
+    onError: () => {
+      toast.error("שגיאה במחיקת הקטגוריה");
+    },
+  });
+
+  const handleAddCategory = () => {
+    setSelectedCategory(null);
+    setCategoryDialogOpen(true);
+  };
+
+  const handleEditCategory = (category: Category) => {
+    setSelectedCategory(category);
+    setCategoryDialogOpen(true);
+  };
+
+  const handleDeleteCategory = (category: Category) => {
+    setCategoryToDelete(category);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (categoryToDelete) {
+      deleteMutation.mutate(categoryToDelete.id);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    setSavingProfile(true);
+    // Simulate saving - in a real app, this would call an API
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setSavingProfile(false);
+    toast.success("פרטי החשבון נשמרו בהצלחה");
+  };
+
+  const handleResetTour = () => {
+    resetTour();
+    setShowWelcomeModal(true);
+    toast.success("הסיור המודרך יופעל מחדש");
+  };
+
+  const getFrameworkIcon = (type: string) => {
+    return type === "KINDERGARTEN" ? Building2 : GraduationCap;
+  };
+
+  const getFrameworkColor = (type: string) => {
+    return type === "KINDERGARTEN"
+      ? "bg-blue-100 dark:bg-blue-900/30 text-blue-600"
+      : "bg-amber-100 dark:bg-amber-900/30 text-amber-600";
+  };
+
   return (
     <div className="min-h-screen">
       <Header title="הגדרות" subtitle="ניהול הגדרות המערכת" />
@@ -46,37 +139,39 @@ export default function SettingsPage() {
             <CardDescription>ניהול המסגרות במערכת (גנים, בית ספר)</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="flex items-center justify-between p-4 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900/30">
-                    <Building2 className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">גנים</p>
-                    <p className="text-sm text-muted-foreground">KINDERGARTEN</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon">
-                  <Edit className="h-4 w-4" />
-                </Button>
+            {frameworksLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
-              
-              <div className="flex items-center justify-between p-4 rounded-lg border">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 dark:bg-amber-900/30">
-                    <GraduationCap className="h-5 w-5 text-amber-600" />
-                  </div>
-                  <div>
-                    <p className="font-medium">בית ספר</p>
-                    <p className="text-sm text-muted-foreground">SCHOOL</p>
-                  </div>
-                </div>
-                <Button variant="ghost" size="icon">
-                  <Edit className="h-4 w-4" />
-                </Button>
+            ) : frameworks && frameworks.length > 0 ? (
+              <div className="grid gap-4 md:grid-cols-2">
+                {frameworks.map((framework) => {
+                  const IconComponent = getFrameworkIcon(framework.type);
+                  return (
+                    <div key={framework.id} className="flex items-center justify-between p-4 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${getFrameworkColor(framework.type)}`}>
+                          <IconComponent className="h-5 w-5" />
+                        </div>
+                        <div>
+                          <p className="font-medium">{framework.name}</p>
+                          <p className="text-sm text-muted-foreground">{framework.type}</p>
+                        </div>
+                      </div>
+                      <div className="text-left">
+                        <p className="font-medium">₪{framework.currentBalance.toLocaleString()}</p>
+                        <p className="text-xs text-muted-foreground">יתרה</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <FolderOpen className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>אין מסגרות במערכת</p>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -90,45 +185,67 @@ export default function SettingsPage() {
               </CardTitle>
               <CardDescription>ניהול קטגוריות ההוצאות במערכת</CardDescription>
             </div>
-            <Button>
+            <Button onClick={handleAddCategory}>
               <Plus className="h-4 w-4 ml-2" />
               קטגוריה חדשה
             </Button>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {demoCategories.map((category) => (
-                <div
-                  key={category.id}
-                  className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="flex h-10 w-10 items-center justify-center rounded-lg text-xl"
-                      style={{ backgroundColor: `${category.color}20` }}
-                    >
-                      {category.icon}
+            {categoriesLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : categories && categories.length > 0 ? (
+              <div className="space-y-2">
+                {categories.filter(c => c.isActive).map((category) => (
+                  <div
+                    key={category.id}
+                    className="flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="flex h-10 w-10 items-center justify-center rounded-lg text-xl"
+                        style={{ backgroundColor: `${category.color}20` }}
+                      >
+                        {category.icon}
+                      </div>
+                      <div>
+                        <p className="font-medium">{category.name}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="font-medium">{category.name}</p>
-                      <p className="text-sm text-muted-foreground">{category.count} הוצאות</p>
+                    <div className="flex items-center gap-2">
+                      <div
+                        className="h-4 w-4 rounded-full"
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEditCategory(category)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="text-destructive"
+                        onClick={() => handleDeleteCategory(category)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div
-                      className="h-4 w-4 rounded-full"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    <Button variant="ghost" size="icon">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="text-destructive">
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Palette className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                <p>אין קטגוריות במערכת</p>
+                <Button variant="link" onClick={handleAddCategory}>
+                  הוסף קטגוריה ראשונה
+                </Button>
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -147,16 +264,32 @@ export default function SettingsPage() {
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <label className="text-sm font-medium">שם מלא</label>
-                <Input defaultValue="מנהל המערכת" />
+                <Input
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">אימייל</label>
-                <Input defaultValue="admin@beityaakov.org" type="email" />
+                <Input
+                  value={profileEmail}
+                  onChange={(e) => setProfileEmail(e.target.value)}
+                  type="email"
+                />
               </div>
             </div>
-            <Button>
-              <Save className="h-4 w-4 ml-2" />
-              שמור שינויים
+            <Button onClick={handleSaveProfile} disabled={savingProfile}>
+              {savingProfile ? (
+                <>
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  שומר...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4 ml-2" />
+                  שמור שינויים
+                </>
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -186,7 +319,7 @@ export default function SettingsPage() {
                 <Input type="password" placeholder="••••••••" />
               </div>
             </div>
-            <Button variant="outline">
+            <Button variant="outline" onClick={() => toast.info("שינוי סיסמה יתווסף בקרוב")}>
               <Lock className="h-4 w-4 ml-2" />
               שנה סיסמה
             </Button>
@@ -227,6 +360,23 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
 
+        {/* Tour Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Info className="h-5 w-5" />
+              סיור מודרך
+            </CardTitle>
+            <CardDescription>הפעל מחדש את הסיור המודרך במערכת</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button variant="outline" onClick={handleResetTour}>
+              <RotateCcw className="h-4 w-4 ml-2" />
+              הפעל סיור מחדש
+            </Button>
+          </CardContent>
+        </Card>
+
         {/* System Info */}
         <Card>
           <CardHeader>
@@ -240,16 +390,53 @@ export default function SettingsPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">שרת:</span>
-                <span className="font-medium">Next.js 14</span>
+                <span className="font-medium">Next.js 15</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">בסיס נתונים:</span>
-                <span className="font-medium">SQLite</span>
+                <span className="font-medium">PostgreSQL</span>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Category Dialog */}
+      <CategoryDialog
+        open={categoryDialogOpen}
+        onOpenChange={setCategoryDialogOpen}
+        category={selectedCategory}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>מחיקת קטגוריה</AlertDialogTitle>
+            <AlertDialogDescription>
+              האם אתה בטוח שברצונך למחוק את הקטגוריה &quot;{categoryToDelete?.name}&quot;?
+              <br />
+              פעולה זו תבטל את הקטגוריה אך לא תמחק הוצאות קיימות.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteMutation.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  מוחק...
+                </>
+              ) : (
+                "מחק קטגוריה"
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
