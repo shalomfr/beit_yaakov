@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,8 @@ const formatCurrency = (amount: number) => {
 };
 
 export function RecentExpenses({ expenses, onAddExpense }: RecentExpensesProps) {
+  const router = useRouter();
+
   return (
     <Card className="shadow-lg border-0">
       <CardHeader className="flex flex-row items-center justify-between border-b pb-4">
@@ -116,7 +119,11 @@ export function RecentExpenses({ expenses, onAddExpense }: RecentExpensesProps) 
 
         {expenses.length > 0 && (
           <div className="mt-6 text-center">
-            <Button variant="ghost" className="text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+            <Button
+              variant="ghost"
+              className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              onClick={() => router.push("/expenses")}
+            >
               הצג את כל ההוצאות ←
             </Button>
           </div>

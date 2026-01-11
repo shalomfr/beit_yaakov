@@ -86,7 +86,7 @@ export function useCompleteTransfer() {
   return useMutation({
     mutationFn: async (id: string) => {
       const response = await fetch(`/api/transfers/${id}/complete`, {
-        method: "POST",
+        method: "PUT",
       });
       if (!response.ok) throw new Error("Failed to complete transfer");
       return response.json();
@@ -105,7 +105,7 @@ export function useCancelTransfer() {
   return useMutation({
     mutationFn: async (id: string) => {
       const response = await fetch(`/api/transfers/${id}/cancel`, {
-        method: "POST",
+        method: "PUT",
       });
       if (!response.ok) throw new Error("Failed to cancel transfer");
       return response.json();

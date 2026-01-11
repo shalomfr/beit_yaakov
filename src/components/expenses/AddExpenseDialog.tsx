@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -17,41 +17,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Building2, GraduationCap } from "lucide-react";
+import { Building2, GraduationCap, Loader2 } from "lucide-react";
+import { useFrameworks } from "@/hooks/useFrameworks";
+import { useCategories } from "@/hooks/useCategories";
+import { useCreateExpense } from "@/hooks/useExpenses";
+import { toast } from "sonner";
 
 interface AddExpenseDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const categories = [
-  { id: "1", name: "משכורות", icon: "💰" },
-  { id: "2", name: "חשמל", icon: "⚡" },
-  { id: "3", name: "תחזוקה", icon: "🔧" },
-  { id: "4", name: "ניקיון", icon: "🧹" },
-  { id: "5", name: "ציוד", icon: "📦" },
-  { id: "6", name: "אחר", icon: "📁" },
-];
-
 export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: frameworks = [], isLoading: frameworksLoading } = useFrameworks();
+  const { data: categories = [], isLoading: categoriesLoading } = useCategories();
+  const createExpense = useCreateExpense();
+
   const [formData, setFormData] = useState({
     frameworkId: "",
     categoryId: "",
     amount: "",
     description: "",
     expenseDate: new Date().toISOString().split("T")[0],
-    expenseType: "OCCASIONAL",
+    expenseType: "OCCASIONAL" as "FIXED" | "OCCASIONAL",
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      // TODO: Implement API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      onOpenChange(false);
+  // Get kindergarten and school frameworks
+  const kindergarten = frameworks.find(f => f.type === "KINDERGARTEN");
+  const school = frameworks.find(f => f.type === "SCHOOL");
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
       setFormData({
         frameworkId: "",
         categoryId: "",
@@ -60,12 +57,36 @@ export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) 
         expenseDate: new Date().toISOString().split("T")[0],
         expenseType: "OCCASIONAL",
       });
+    }
+  }, [open]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.frameworkId || !formData.categoryId || !formData.amount) {
+      toast.error("אנא מלא את כל השדות");
+      return;
+    }
+
+    try {
+      await createExpense.mutateAsync({
+        frameworkId: formData.frameworkId,
+        categoryId: formData.categoryId,
+        amount: parseFloat(formData.amount),
+        description: formData.description,
+        expenseDate: formData.expenseDate,
+        expenseType: formData.expenseType,
+      });
+
+      toast.success("ההוצאה נוספה בהצלחה");
+      onOpenChange(false);
     } catch (error) {
       console.error("Error adding expense:", error);
-    } finally {
-      setIsLoading(false);
+      toast.error("שגיאה בהוספת ההוצאה");
     }
   };
+
+  const isLoading = frameworksLoading || categoriesLoading || createExpense.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -81,27 +102,29 @@ export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) 
             <div className="grid grid-cols-2 gap-3">
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, frameworkId: "kindergarten" })}
+                disabled={!kindergarten}
+                onClick={() => kindergarten && setFormData({ ...formData, frameworkId: kindergarten.id })}
                 className={`flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-colors ${
-                  formData.frameworkId === "kindergarten"
+                  formData.frameworkId === kindergarten?.id
                     ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                     : "border-border hover:border-blue-300"
-                }`}
+                } ${!kindergarten ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <Building2 className="h-5 w-5 text-blue-600" />
-                <span className="font-medium">גנים</span>
+                <span className="font-medium">{kindergarten?.name || "גנים"}</span>
               </button>
               <button
                 type="button"
-                onClick={() => setFormData({ ...formData, frameworkId: "school" })}
+                disabled={!school}
+                onClick={() => school && setFormData({ ...formData, frameworkId: school.id })}
                 className={`flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-colors ${
-                  formData.frameworkId === "school"
+                  formData.frameworkId === school?.id
                     ? "border-amber-500 bg-amber-50 dark:bg-amber-900/20"
                     : "border-border hover:border-amber-300"
-                }`}
+                } ${!school ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 <GraduationCap className="h-5 w-5 text-amber-600" />
-                <span className="font-medium">בית ספר</span>
+                <span className="font-medium">{school?.name || "בית ספר"}</span>
               </button>
             </div>
           </div>
@@ -114,10 +137,10 @@ export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) 
               onValueChange={(value) => setFormData({ ...formData, categoryId: value })}
             >
               <SelectTrigger>
-                <SelectValue placeholder="בחר קטגוריה" />
+                <SelectValue placeholder={categoriesLoading ? "טוען..." : "בחר קטגוריה"} />
               </SelectTrigger>
               <SelectContent>
-                {categories.map((category) => (
+                {categories.filter(c => c.isActive !== false).map((category) => (
                   <SelectItem key={category.id} value={category.id}>
                     <span className="flex items-center gap-2">
                       <span>{category.icon}</span>
@@ -207,7 +230,14 @@ export function AddExpenseDialog({ open, onOpenChange }: AddExpenseDialogProps) 
               ביטול
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "שומר..." : "הוסף הוצאה"}
+              {createExpense.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  שומר...
+                </>
+              ) : (
+                "הוסף הוצאה"
+              )}
             </Button>
           </DialogFooter>
         </form>

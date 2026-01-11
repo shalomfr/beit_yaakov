@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,8 +10,11 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Building2, GraduationCap, ArrowLeft } from "lucide-react";
+import { Building2, GraduationCap, ArrowLeft, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useFrameworks } from "@/hooks/useFrameworks";
+import { useCreateTransfer } from "@/hooks/useTransfers";
+import { toast } from "sonner";
 
 interface AddTransferDialogProps {
   open: boolean;
@@ -19,7 +22,9 @@ interface AddTransferDialogProps {
 }
 
 export function AddTransferDialog({ open, onOpenChange }: AddTransferDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
+  const { data: frameworks = [], isLoading: frameworksLoading } = useFrameworks();
+  const createTransfer = useCreateTransfer();
+
   const [formData, setFormData] = useState({
     sourceFrameworkId: "",
     targetFrameworkId: "",
@@ -28,14 +33,13 @@ export function AddTransferDialog({ open, onOpenChange }: AddTransferDialogProps
     transferDate: new Date().toISOString().split("T")[0],
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    
-    try {
-      // TODO: Implement API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      onOpenChange(false);
+  // Get kindergarten and school frameworks
+  const kindergarten = frameworks.find(f => f.type === "KINDERGARTEN");
+  const school = frameworks.find(f => f.type === "SCHOOL");
+
+  // Reset form when dialog closes
+  useEffect(() => {
+    if (!open) {
       setFormData({
         sourceFrameworkId: "",
         targetFrameworkId: "",
@@ -43,10 +47,31 @@ export function AddTransferDialog({ open, onOpenChange }: AddTransferDialogProps
         description: "",
         transferDate: new Date().toISOString().split("T")[0],
       });
+    }
+  }, [open]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.sourceFrameworkId || !formData.targetFrameworkId || !formData.amount) {
+      toast.error("אנא מלא את כל השדות");
+      return;
+    }
+
+    try {
+      await createTransfer.mutateAsync({
+        sourceFrameworkId: formData.sourceFrameworkId,
+        targetFrameworkId: formData.targetFrameworkId,
+        amount: parseFloat(formData.amount),
+        description: formData.description,
+        transferDate: formData.transferDate,
+      });
+
+      toast.success("ההעברה נוצרה בהצלחה");
+      onOpenChange(false);
     } catch (error) {
       console.error("Error adding transfer:", error);
-    } finally {
-      setIsLoading(false);
+      toast.error("שגיאה ביצירת ההעברה");
     }
   };
 
@@ -57,6 +82,8 @@ export function AddTransferDialog({ open, onOpenChange }: AddTransferDialogProps
       targetFrameworkId: formData.sourceFrameworkId,
     });
   };
+
+  const isLoading = frameworksLoading || createTransfer.isPending;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -69,7 +96,7 @@ export function AddTransferDialog({ open, onOpenChange }: AddTransferDialogProps
           {/* Source & Target Selection */}
           <div className="space-y-4">
             <label className="text-sm font-medium">מאיפה לאיפה?</label>
-            
+
             <div className="flex items-center gap-4">
               {/* Source */}
               <div className="flex-1 space-y-2">
@@ -77,29 +104,41 @@ export function AddTransferDialog({ open, onOpenChange }: AddTransferDialogProps
                 <div className="grid grid-cols-1 gap-2">
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, sourceFrameworkId: "kindergarten", targetFrameworkId: formData.targetFrameworkId === "kindergarten" ? "" : formData.targetFrameworkId })}
+                    disabled={!kindergarten}
+                    onClick={() => kindergarten && setFormData({
+                      ...formData,
+                      sourceFrameworkId: kindergarten.id,
+                      targetFrameworkId: formData.targetFrameworkId === kindergarten.id ? "" : formData.targetFrameworkId
+                    })}
                     className={cn(
                       "flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors",
-                      formData.sourceFrameworkId === "kindergarten"
+                      formData.sourceFrameworkId === kindergarten?.id
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
-                        : "border-border hover:border-blue-300"
+                        : "border-border hover:border-blue-300",
+                      !kindergarten && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     <Building2 className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium">גנים</span>
+                    <span className="font-medium">{kindergarten?.name || "גנים"}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, sourceFrameworkId: "school", targetFrameworkId: formData.targetFrameworkId === "school" ? "" : formData.targetFrameworkId })}
+                    disabled={!school}
+                    onClick={() => school && setFormData({
+                      ...formData,
+                      sourceFrameworkId: school.id,
+                      targetFrameworkId: formData.targetFrameworkId === school.id ? "" : formData.targetFrameworkId
+                    })}
                     className={cn(
                       "flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors",
-                      formData.sourceFrameworkId === "school"
+                      formData.sourceFrameworkId === school?.id
                         ? "border-amber-500 bg-amber-50 dark:bg-amber-900/20"
-                        : "border-border hover:border-amber-300"
+                        : "border-border hover:border-amber-300",
+                      !school && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     <GraduationCap className="h-5 w-5 text-amber-600" />
-                    <span className="font-medium">בי״ס</span>
+                    <span className="font-medium">{school?.name || "בי״ס"}</span>
                   </button>
                 </div>
               </div>
@@ -119,33 +158,41 @@ export function AddTransferDialog({ open, onOpenChange }: AddTransferDialogProps
                 <div className="grid grid-cols-1 gap-2">
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, targetFrameworkId: "kindergarten", sourceFrameworkId: formData.sourceFrameworkId === "kindergarten" ? "" : formData.sourceFrameworkId })}
-                    disabled={formData.sourceFrameworkId === "kindergarten"}
+                    disabled={!kindergarten || formData.sourceFrameworkId === kindergarten?.id}
+                    onClick={() => kindergarten && setFormData({
+                      ...formData,
+                      targetFrameworkId: kindergarten.id,
+                      sourceFrameworkId: formData.sourceFrameworkId === kindergarten.id ? "" : formData.sourceFrameworkId
+                    })}
                     className={cn(
                       "flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors",
-                      formData.targetFrameworkId === "kindergarten"
+                      formData.targetFrameworkId === kindergarten?.id
                         ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                         : "border-border hover:border-blue-300",
-                      formData.sourceFrameworkId === "kindergarten" && "opacity-50 cursor-not-allowed"
+                      (!kindergarten || formData.sourceFrameworkId === kindergarten?.id) && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     <Building2 className="h-5 w-5 text-blue-600" />
-                    <span className="font-medium">גנים</span>
+                    <span className="font-medium">{kindergarten?.name || "גנים"}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFormData({ ...formData, targetFrameworkId: "school", sourceFrameworkId: formData.sourceFrameworkId === "school" ? "" : formData.sourceFrameworkId })}
-                    disabled={formData.sourceFrameworkId === "school"}
+                    disabled={!school || formData.sourceFrameworkId === school?.id}
+                    onClick={() => school && setFormData({
+                      ...formData,
+                      targetFrameworkId: school.id,
+                      sourceFrameworkId: formData.sourceFrameworkId === school.id ? "" : formData.sourceFrameworkId
+                    })}
                     className={cn(
                       "flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors",
-                      formData.targetFrameworkId === "school"
+                      formData.targetFrameworkId === school?.id
                         ? "border-amber-500 bg-amber-50 dark:bg-amber-900/20"
                         : "border-border hover:border-amber-300",
-                      formData.sourceFrameworkId === "school" && "opacity-50 cursor-not-allowed"
+                      (!school || formData.sourceFrameworkId === school?.id) && "opacity-50 cursor-not-allowed"
                     )}
                   >
                     <GraduationCap className="h-5 w-5 text-amber-600" />
-                    <span className="font-medium">בי״ס</span>
+                    <span className="font-medium">{school?.name || "בי״ס"}</span>
                   </button>
                 </div>
               </div>
@@ -198,11 +245,18 @@ export function AddTransferDialog({ open, onOpenChange }: AddTransferDialogProps
             >
               ביטול
             </Button>
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               disabled={isLoading || !formData.sourceFrameworkId || !formData.targetFrameworkId}
             >
-              {isLoading ? "מעביר..." : "בצע העברה"}
+              {createTransfer.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 ml-2 animate-spin" />
+                  מעביר...
+                </>
+              ) : (
+                "בצע העברה"
+              )}
             </Button>
           </DialogFooter>
         </form>

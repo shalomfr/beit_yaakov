@@ -119,9 +119,9 @@ export function usePayDebt() {
   return useMutation({
     mutationFn: async ({ id, amount }: { id: string; amount: number }) => {
       const response = await fetch(`/api/debts/${id}/pay`, {
-        method: "POST",
+        method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
+        body: JSON.stringify({ amount, paidDate: new Date().toISOString() }),
       });
       if (!response.ok) throw new Error("Failed to pay debt");
       return response.json();
