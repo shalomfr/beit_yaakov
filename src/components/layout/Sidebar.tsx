@@ -60,14 +60,15 @@ export function Sidebar() {
       </div>
 
       {/* Navigation */}
-      <nav className="mt-8 px-4">
+      <nav className="mt-8 px-4" data-tour="sidebar">
         <ul className="space-y-2">
-          {navigation.map((item) => {
+          {navigation.map((item, index) => {
             const isActive = pathname === item.href;
             return (
               <li key={item.name}>
                 <Link
                   href={item.href}
+                  data-tour={index === 1 ? "expenses-nav" : undefined}
                   className={cn(
                     "group flex items-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium transition-all duration-200",
                     isActive

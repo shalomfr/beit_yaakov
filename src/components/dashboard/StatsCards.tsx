@@ -90,35 +90,41 @@ export function StatsCards({
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-      <StatCard
-        title="הוצאות גנים"
-        value={formatCurrency(kindergartenTotal)}
-        change={kindergartenChange !== 0 ? {
-          value: kindergartenChange,
-          label: "מהחודש הקודם"
-        } : undefined}
-        icon={<Building2 className="h-7 w-7 text-white" />}
-        gradient="bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600"
-      />
+      <div data-tour="kindergarten-card">
+        <StatCard
+          title="הוצאות גנים"
+          value={formatCurrency(kindergartenTotal)}
+          change={kindergartenChange !== 0 ? {
+            value: kindergartenChange,
+            label: "מהחודש הקודם"
+          } : undefined}
+          icon={<Building2 className="h-7 w-7 text-white" />}
+          gradient="bg-gradient-to-br from-blue-500 via-blue-600 to-cyan-600"
+        />
+      </div>
 
-      <StatCard
-        title="הוצאות בית ספר"
-        value={formatCurrency(schoolTotal)}
-        change={schoolChange !== 0 ? {
-          value: schoolChange,
-          label: "מהחודש הקודם"
-        } : undefined}
-        icon={<GraduationCap className="h-7 w-7 text-white" />}
-        gradient="bg-gradient-to-br from-amber-500 via-orange-600 to-red-600"
-      />
+      <div data-tour="school-card">
+        <StatCard
+          title="הוצאות בית ספר"
+          value={formatCurrency(schoolTotal)}
+          change={schoolChange !== 0 ? {
+            value: schoolChange,
+            label: "מהחודש הקודם"
+          } : undefined}
+          icon={<GraduationCap className="h-7 w-7 text-white" />}
+          gradient="bg-gradient-to-br from-amber-500 via-orange-600 to-red-600"
+        />
+      </div>
 
-      <StatCard
-        title="סה״כ הוצאות החודש"
-        value={formatCurrency(monthTotal)}
-        subtitle={`קבועות: ${formatCurrency(fixedAmount)} | מזדמנות: ${formatCurrency(occasionalAmount)}`}
-        icon={<BarChart3 className="h-7 w-7 text-white" />}
-        gradient="bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600"
-      />
+      <div data-tour="expense-types">
+        <StatCard
+          title="סה״כ הוצאות החודש"
+          value={formatCurrency(monthTotal)}
+          subtitle={`קבועות: ${formatCurrency(fixedAmount)} | מזדמנות: ${formatCurrency(occasionalAmount)}`}
+          icon={<BarChart3 className="h-7 w-7 text-white" />}
+          gradient="bg-gradient-to-br from-purple-500 via-purple-600 to-indigo-600"
+        />
+      </div>
     </div>
   );
 }

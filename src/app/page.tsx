@@ -85,31 +85,39 @@ export default function DashboardPage() {
 
       <div className="p-8 space-y-8 max-w-[1800px] mx-auto">
         {/* Stats Cards */}
-        <StatsCards
-          kindergartenTotal={52800}
-          schoolTotal={89000}
-          monthTotal={141800}
-          fixedAmount={118700}
-          occasionalAmount={23100}
-          kindergartenChange={12}
-          schoolChange={-5}
-        />
-
-        {/* Chart and Quick Actions */}
-        <div className="grid gap-6 lg:grid-cols-3">
-          <ExpenseChart data={demoChartData} />
-          <QuickActions
-            onAddExpense={() => setIsAddExpenseOpen(true)}
-            onAddTransfer={() => router.push("/transfers")}
-            onAddDebt={() => router.push("/debts")}
+        <div data-tour="stats-cards">
+          <StatsCards
+            kindergartenTotal={52800}
+            schoolTotal={89000}
+            monthTotal={141800}
+            fixedAmount={118700}
+            occasionalAmount={23100}
+            kindergartenChange={12}
+            schoolChange={-5}
           />
         </div>
 
+        {/* Chart and Quick Actions */}
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div data-tour="expense-chart">
+            <ExpenseChart data={demoChartData} />
+          </div>
+          <div data-tour="quick-actions">
+            <QuickActions
+              onAddExpense={() => setIsAddExpenseOpen(true)}
+              onAddTransfer={() => router.push("/transfers")}
+              onAddDebt={() => router.push("/debts")}
+            />
+          </div>
+        </div>
+
         {/* Recent Expenses */}
-        <RecentExpenses
-          expenses={demoExpenses}
-          onAddExpense={() => setIsAddExpenseOpen(true)}
-        />
+        <div data-tour="recent-expenses">
+          <RecentExpenses
+            expenses={demoExpenses}
+            onAddExpense={() => setIsAddExpenseOpen(true)}
+          />
+        </div>
       </div>
 
       {/* Add Expense Dialog */}
