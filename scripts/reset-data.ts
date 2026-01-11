@@ -23,7 +23,11 @@ async function resetData() {
     const deletedExpenses = await prisma.expense.deleteMany({});
     console.log(`✓ Deleted ${deletedExpenses.count} expenses`);
 
-    // Note: Transfer model doesn't exist yet
+    // Reset framework balances to 0
+    const updatedFrameworks = await prisma.framework.updateMany({
+      data: { currentBalance: 0 }
+    });
+    console.log(`✓ Reset ${updatedFrameworks.count} framework balances to 0`);
 
     console.log('\n✅ Data reset completed successfully!');
     console.log('📝 Frameworks and categories are preserved.');
